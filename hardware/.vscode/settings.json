@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "*.vars": "makefile",
+        "*.v": "verilog",
+        "*.in": "shellscript",
+        "*.rules": "makefile",
+        "log": "log",
+        "i2c.h": "c",
+        "kernel.h": "c",
+        "cstdio": "c"
+    },
+    "nrf-connect.applications": [],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true
+}

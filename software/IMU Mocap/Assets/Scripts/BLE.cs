@@ -37,13 +37,20 @@ public class BLE : MonoBehaviour {
     private string selectedServiceId = "{00000000-0000-0000-0000-000000000000}";
     private string selectedCharacteristicId = "{00000000-0000-0000-0000-000000000000}";
     private Dictionary<string, Dictionary<string, string>> devices = new Dictionary<string, Dictionary<string, string>>();
+    public static int counter = 0;
+    private static bool staticIsConnected = false;
 
     void Start() {
+        DontDestroyOnLoad(gameObject);
         scanResultRoot = scanResult.transform.parent;
         scanResult.transform.SetParent(null);
+
+        isConnected = staticIsConnected;
+        UpdateConnectButtonUI();
     }
 
     void Update() {
+        Debug.Log("BLE Update:" + counter);
         BLEApi.ScanStatus status;
         if (isScanningDevices) {
             BLEApi.DeviceUpdate res = new BLEApi.DeviceUpdate();
@@ -77,7 +84,11 @@ public class BLE : MonoBehaviour {
                 }
             } while (status == BLEApi.ScanStatus.AVAILABLE);
         }
-        if (isConnected) {
+        if (isConnected)
+        {   
+            if (counter == 99) counter = 0;
+            counter += 1;
+            receivedInputText.text = counter.ToString();
             BLEApi.BLEData res = new BLEApi.BLEData();
             while (BLEApi.PollData(out res, false)) {
                 if (res.deviceId == selectedDeviceIds[0]) {
@@ -188,15 +199,26 @@ public class BLE : MonoBehaviour {
     }
 
     public void Connect() {
-        foreach (string selectedDeviceId in selectedDeviceIds) {
-            BLEApi.SubscribeCharacteristic(selectedDeviceId, selectedServiceId, selectedCharacteristicId, false);
+        if(!isConnected)
+        {
+            foreach (string selectedDeviceId in selectedDeviceIds)
+            {
+                BLEApi.SubscribeCharacteristic(selectedDeviceId, selectedServiceId, selectedCharacteristicId, false);
+            }
+            isConnected = true;
+            staticIsConnected = true;
+            UpdateUIPostConnection();
         }
-        isConnected = true;
-        isScanningDevices = false;
-        scanStatusText.text = "Finished!";
-        scanButton.interactable = false;
-        connectButtonText.text = "Connected";
-        connectButton.interactable = false;
+
+            /*foreach (string selectedDeviceId in selectedDeviceIds) {
+                BLEApi.SubscribeCharacteristic(selectedDeviceId, selectedServiceId, selectedCharacteristicId, false);
+            }
+            isConnected = true;
+            isScanningDevices = false;
+            scanStatusText.text = "Finished!";
+            scanButton.interactable = false;
+            connectButtonText.text = "Connected";
+            connectButton.interactable = false;*/
     }
 
     /*
@@ -216,6 +238,21 @@ public class BLE : MonoBehaviour {
         }
     }
     */
+    private void UpdateConnectButtonUI()
+    {
+        connectButtonText.text = isConnected ? "Connected" : "Connect";
+        connectButton.interactable = !isConnected;
+    }
+
+    private void UpdateUIPostConnection()
+    {
+        isScanningDevices = false;
+        scanStatusText.text = "Finished!";
+        scanButton.interactable = false;
+        UpdateConnectButtonUI();
+    }
+
+    
 
     private void OnApplicationQuit() {
         BLEApi.Quit();
